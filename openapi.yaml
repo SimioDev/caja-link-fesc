@@ -107,6 +107,8 @@ paths:
           schema:
             type: integer
             default: 100
+            minimum: 1
+            maximum: 1000
       responses:
         "200":
           description: Entradas de auditoria
@@ -120,6 +122,8 @@ paths:
           description: Token ausente
         "403":
           description: Token valido pero no es ADMIN_TOKEN
+        "422":
+          description: limit fuera del rango 1 a 1000
 components:
   securitySchemes:
     bearerAuth:

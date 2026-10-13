@@ -1,6 +1,6 @@
 import pytest
 
-from src.audit import AuditLog
+from src.audit import AUDIT_MAX_LIMIT, AuditLog
 from src.schemas import ConsultaResultado
 
 
@@ -38,3 +38,22 @@ async def test_recientes_clamps_negative_or_oversized_limit():
 
     assert await log.recientes(limit=-5) == []
     assert len(await log.recientes(limit=10_000)) == 3
+
+
+@pytest.mark.asyncio
+async def test_recientes_with_zero_or_negative_limit_never_dumps_the_whole_log():
+    log = AuditLog()
+    for i in range(10):
+        await log.registrar("NORTE", "VALIDACION_AFILIACION", ConsultaResultado.NO_AFILIADO, f"10000000{i:02d}")
+
+    assert await log.recientes(limit=0) == []
+    assert await log.recientes(limit=-3) == []
+
+
+@pytest.mark.asyncio
+async def test_recientes_never_returns_more_than_the_max_limit():
+    log = AuditLog()
+    for i in range(AUDIT_MAX_LIMIT + 5):
+        await log.registrar("NORTE", "VALIDACION_AFILIACION", ConsultaResultado.NO_AFILIADO, f"{i:010d}")
+
+    assert len(await log.recientes(limit=AUDIT_MAX_LIMIT + 5)) == AUDIT_MAX_LIMIT

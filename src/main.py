@@ -2,10 +2,10 @@ import logging
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request
 
 from .adapters.registry import build_adapters
-from .audit import AuditLog
+from .audit import AUDIT_MAX_LIMIT, AuditLog
 from .batch import BatchStore
 from .config import Settings
 from .documents import normalize
@@ -72,7 +72,11 @@ async def consulta_v2(
 
 
 @app.get("/api/v1/audit", response_model=list[AuditEntry])
-async def auditoria(request: Request, limit: int = 100, _: None = Depends(require_admin)) -> list[AuditEntry]:
+async def auditoria(
+    request: Request,
+    limit: int = Query(100, ge=1, le=AUDIT_MAX_LIMIT),
+    _: None = Depends(require_admin),
+) -> list[AuditEntry]:
     return await request.app.state.audit.recientes(limit)
 
 
