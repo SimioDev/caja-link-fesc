@@ -1,1 +1,21 @@
 .env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Entornos virtuales (por si alguien corre algo fuera de Docker)
+.venv/
+venv/
+
+# Salida generada por el validador / las pruebas del equipo
+test-results/
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
