@@ -30,6 +30,12 @@ def test_requester_from_token_rejects_the_admin_token_as_a_caja():
     assert excinfo.value.status_code == 401
 
 
+def test_requester_from_token_rejects_non_ascii_token_with_401_not_500():
+    with pytest.raises(HTTPException) as excinfo:
+        requester_from_token("Bearer ét", _settings())
+    assert excinfo.value.status_code == 401
+
+
 def test_require_admin_accepts_only_the_admin_token():
     require_admin("Bearer token-admin", _settings())  # no lanza
     with pytest.raises(HTTPException) as excinfo:

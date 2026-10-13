@@ -8,6 +8,12 @@ from .config import Settings
 VALID_PURPOSES = {"TARIFA_SUBSIDIADA", "SUBSIDIO_MONETARIO", "VALIDACION_AFILIACION"}
 
 
+def _tokens_match(a: str, b: str) -> bool:
+    """Comparacion en tiempo constante que tolera tokens no-ASCII (hmac.compare_digest
+    con str exige ASCII puro; comparamos en bytes para evitar un 500 con input raro)."""
+    return hmac.compare_digest(a.encode("utf-8"), b.encode("utf-8"))
+
+
 def get_settings(request: Request) -> Settings:
     return request.app.state.settings
 
@@ -19,7 +25,7 @@ def requester_from_token(
         raise HTTPException(status_code=401, detail="Falta token Bearer")
     token = authorization.removeprefix("Bearer ").strip()
     for caja, expected in settings.tokens.items():
-        if caja != "ADMIN" and expected and hmac.compare_digest(token, expected):
+        if caja != "ADMIN" and expected and _tokens_match(token, expected):
             return caja
     raise HTTPException(status_code=401, detail="Token invalido")
 
@@ -31,7 +37,7 @@ def require_admin(
         raise HTTPException(status_code=401, detail="Falta token Bearer")
     token = authorization.removeprefix("Bearer ").strip()
     expected = settings.tokens.get("ADMIN")
-    if not expected or not hmac.compare_digest(token, expected):
+    if not expected or not _tokens_match(token, expected):
         raise HTTPException(status_code=403, detail="Requiere ADMIN_TOKEN")
 
 

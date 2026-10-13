@@ -46,12 +46,12 @@ Variables de `.env.example`:
   consumidora se autentica contra Caja Link (ejemplo: `cambiar-norte`).
 - `ADMIN_TOKEN`: token que exige el endpoint de auditoría (ejemplo: `cambiar-admin`).
 - `CAJA_NORTE_URL`: URL donde Caja Link encuentra a Caja Norte (ejemplo: `http://caja-norte:9001`).
-- `CAJA_NORTE_API_KEY`: llave que Caja Link usa para autenticarse contra Caja Norte (ejemplo: `norte-key`).
+- `CAJA_NORTE_API_KEY`: llave que Caja Link usa para autenticarse contra Caja Norte (valor propio de ese entorno, ver `.env.example`).
 - `CAJA_ORIENTE_URL`: endpoint SOAP de Caja Oriente (ejemplo: `http://caja-oriente:9002/ws/AfiliacionService`).
-- `CAJA_ORIENTE_USER`, `CAJA_ORIENTE_PASSWORD`: credenciales SOAP de Caja Oriente (ejemplo: `caja-link` / `oriente-pass`).
+- `CAJA_ORIENTE_USER`, `CAJA_ORIENTE_PASSWORD`: credenciales SOAP de Caja Oriente (valores propios de ese entorno, ver `.env.example`).
 - `CAJA_CENTRO_DIR`: directorio donde Caja Link busca el archivo plano diario de Caja Centro (ejemplo: `/data/caja-centro`).
 - `CAJA_SUR_URL`: endpoint REST v2 de Caja Sur (ejemplo: `http://caja-sur:9004`).
-- `CAJA_SUR_TOKEN`: token Bearer con el que Caja Link se autentica contra Caja Sur (ejemplo: `sur-token`).
+- `CAJA_SUR_TOKEN`: token Bearer con el que Caja Link se autentica contra Caja Sur (valor propio de ese entorno, ver `.env.example`).
 - `CAJA_SUR_ENABLED`: en `true` activa el adaptador de Caja Sur sin tocar código (ejemplo: `false`).
 - `CAJA_NORTE_PORT`, `CAJA_ORIENTE_PORT`, `CAJA_SUR_PORT`: puertos publicados en el host para cada caja simulada (ejemplo: `9001`, `9002`, `9004`).
 

@@ -43,3 +43,22 @@ def test_batch_checks_unknown_job_id_responds_404(base_url):
     headers = {"Authorization": "Bearer " + os.environ["NORTE_TOKEN"]}
     response = requests.get(f"{base_url}/api/v1/batch-checks/no-existe", headers=headers, timeout=10)
     assert response.status_code == 404
+
+
+def test_batch_checks_status_sin_token_responde_401(base_url, known_norte_document):
+    headers = _headers()
+    payload = f"document\n{known_norte_document}\n"
+    job_id = requests.post(f"{base_url}/api/v1/batch-checks", headers=headers, data=payload, timeout=30).json()["jobId"]
+
+    response = requests.get(f"{base_url}/api/v1/batch-checks/{job_id}", timeout=10)
+    assert response.status_code == 401
+
+
+def test_batch_checks_status_de_otra_caja_responde_404(base_url, known_norte_document):
+    headers = _headers()
+    payload = f"document\n{known_norte_document}\n"
+    job_id = requests.post(f"{base_url}/api/v1/batch-checks", headers=headers, data=payload, timeout=30).json()["jobId"]
+
+    otra_caja_headers = {"Authorization": "Bearer " + os.environ["ORIENTE_TOKEN"]}
+    response = requests.get(f"{base_url}/api/v1/batch-checks/{job_id}", headers=otra_caja_headers, timeout=10)
+    assert response.status_code == 404

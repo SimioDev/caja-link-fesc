@@ -104,8 +104,10 @@ async def crear_lote(
 
 
 @app.get("/api/v1/batch-checks/{job_id}", response_model=BatchJobStatus)
-async def estado_lote(job_id: str, request: Request) -> BatchJobStatus:
-    job = request.app.state.batch_store.get(job_id)
+async def estado_lote(
+    job_id: str, request: Request, requester: str = Depends(requester_from_token)
+) -> BatchJobStatus:
+    job = request.app.state.batch_store.get_owned(job_id, requester)
     if job is None:
         raise HTTPException(status_code=404, detail="jobId desconocido")
     return BatchJobStatus(status=job.status, results=job.results)

@@ -9,13 +9,13 @@ def _settings(sur_enabled: bool) -> Settings:
     return Settings(
         tokens={},
         norte_url="http://caja-norte:9001",
-        norte_api_key="norte-key",
+        norte_api_key="fake-key-para-test",
         oriente_url="http://caja-oriente:9002/ws/AfiliacionService",
-        oriente_user="caja-link",
-        oriente_password="oriente-pass",
+        oriente_user="fake-usuario-para-test",
+        oriente_password="fake-clave-para-test",
         centro_dir="/data/caja-centro",
         sur_url="http://caja-sur:9004",
-        sur_token="sur-token",
+        sur_token="fake-token-para-test",
         sur_enabled=sur_enabled,
         cajas_declaradas=(
             CajaDeclaration(nombre="norte", adaptador="rest_api_key"),

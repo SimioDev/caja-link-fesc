@@ -3,10 +3,10 @@ import os
 import pytest
 
 NORTE_URL = os.environ.get("CAJA_NORTE_URL", "http://caja-norte:9001")
-NORTE_API_KEY = os.environ.get("CAJA_NORTE_API_KEY", "norte-key")
+NORTE_API_KEY = os.environ["CAJA_NORTE_API_KEY"]
 ORIENTE_URL = os.environ.get("CAJA_ORIENTE_URL", "http://caja-oriente:9002/ws/AfiliacionService")
-ORIENTE_USER = os.environ.get("CAJA_ORIENTE_USER", "caja-link")
-ORIENTE_PASSWORD = os.environ.get("CAJA_ORIENTE_PASSWORD", "oriente-pass")
+ORIENTE_USER = os.environ["CAJA_ORIENTE_USER"]
+ORIENTE_PASSWORD = os.environ["CAJA_ORIENTE_PASSWORD"]
 CENTRO_DIR = os.environ.get("CAJA_CENTRO_DIR", "/data/caja-centro")
 
 
