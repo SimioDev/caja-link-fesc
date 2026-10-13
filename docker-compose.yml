@@ -33,13 +33,30 @@ services:
     ports:
       - "${CAJA_SUR_PORT:-9004}:9004"
 
-  # Agreguen aquí su servicio de interoperabilidad (puerto de contrato 8083).
-  # Caja Centro no tiene servicio: monten ./caja-centro (archivo plano diario).
-  # caja-link:
-  #   build: ./src
-  #   env_file: .env
-  #   ports:
-  #     - "8083:8083"
-  #   volumes:
-  #     - ./caja-centro:/data/caja-centro:ro
-  #     - ./config:/app/config:ro
+  caja-link:
+    build: .
+    env_file: .env
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./caja-centro:/data/caja-centro:ro
+      - ./config:/app/config:ro
+    depends_on:
+      - caja-norte
+      - caja-oriente
+
+  tests:
+    build:
+      context: .
+      dockerfile: tests/Dockerfile
+    profiles: ["test"]
+    env_file: .env
+    environment:
+      SERVICE_BASE_URL: http://caja-link:8083
+    volumes:
+      - ./caja-centro:/data/caja-centro:ro
+      - ./test-results:/app/test-results
+    depends_on:
+      - caja-link
+      - caja-norte
+      - caja-oriente
