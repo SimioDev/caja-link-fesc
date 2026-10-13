@@ -2,7 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.config import CajaDeclaration, Settings
-from src.security import require_admin, requester_from_token, validar_purpose
+from src.security import require_admin, requester_from_token, validar_documento, validar_purpose
 
 
 def _settings() -> Settings:
@@ -50,3 +50,14 @@ def test_validar_purpose_accepts_only_the_three_known_values():
     assert excinfo.value.status_code == 400
     with pytest.raises(HTTPException):
         validar_purpose("MERCADEO")
+
+
+def test_validar_documento_returns_the_canonical_document():
+    assert validar_documento("001.098.765.432") == "1098765432"
+
+
+@pytest.mark.parametrize("raw", ["abc", "...", " ", "000"])
+def test_validar_documento_rejects_documents_without_digits_with_400(raw):
+    with pytest.raises(HTTPException) as excinfo:
+        validar_documento(raw)
+    assert excinfo.value.status_code == 400

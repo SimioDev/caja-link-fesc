@@ -1,4 +1,6 @@
-from src.documents import mask, normalize, to_oriente_format
+import pytest
+
+from src.documents import is_valid, mask, normalize, to_oriente_format
 
 
 def test_normalize_strips_dots_spaces_and_leading_zeros():
@@ -12,6 +14,16 @@ def test_normalize_is_idempotent_across_variants_of_the_same_document():
     assert normalize("1.098.765.432") == canonical
     assert normalize("001098765432") == canonical
     assert normalize(" 1098765432 ") == canonical
+
+
+@pytest.mark.parametrize("raw", ["abc", "...", "   ", "", "0", "000.000"])
+def test_is_valid_rejects_documents_without_meaningful_digits(raw):
+    assert not is_valid(normalize(raw))
+
+
+@pytest.mark.parametrize("raw", ["1.098.765.432", "001098765432", "7"])
+def test_is_valid_accepts_documents_with_digits(raw):
+    assert is_valid(normalize(raw))
 
 
 def test_to_oriente_format_pads_to_twelve_digits():

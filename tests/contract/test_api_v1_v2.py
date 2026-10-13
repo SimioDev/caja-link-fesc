@@ -1,5 +1,6 @@
 import os
 
+import pytest
 import requests
 
 
@@ -105,3 +106,23 @@ def test_v2_agrega_affiliate_type_y_v1_no_cambia(base_url, known_norte_document)
     ).json()
     assert "affiliateType" not in v1["matches"][0]
     assert v2["matches"][0]["affiliateType"] in ("DEPENDIENTE", "INDEPENDIENTE", "PENSIONADO")
+
+
+@pytest.mark.parametrize("version", ["v1", "v2"])
+@pytest.mark.parametrize("document", ["abc", "..."])
+def test_consulta_con_documento_sin_digitos_responde_400(base_url, version, document):
+    headers = {"Authorization": "Bearer " + _token("CENTRO_TOKEN")}
+    response = requests.get(
+        f"{base_url}/api/{version}/affiliations/{document}",
+        headers=headers,
+        params={"purpose": "VALIDACION_AFILIACION"},
+        timeout=10,
+    )
+    assert response.status_code == 400
+
+
+def test_consulta_con_documento_sin_digitos_y_sin_token_responde_401(base_url):
+    response = requests.get(
+        f"{base_url}/api/v1/affiliations/abc", params={"purpose": "VALIDACION_AFILIACION"}, timeout=10
+    )
+    assert response.status_code == 401

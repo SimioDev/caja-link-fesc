@@ -22,7 +22,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AffiliationResponseV1'
         "400":
-          description: purpose ausente o invalido
+          description: purpose ausente o invalido, o document sin digitos
         "401":
           description: Token ausente o invalido
   /api/v2/affiliations/{document}:
@@ -41,7 +41,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/AffiliationResponseV2'
         "400":
-          description: purpose ausente o invalido
+          description: purpose ausente o invalido, o document sin digitos
         "401":
           description: Token ausente o invalido
   /api/v1/batch-checks:

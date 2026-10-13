@@ -8,7 +8,6 @@ from .adapters.registry import build_adapters
 from .audit import AUDIT_MAX_LIMIT, AuditLog
 from .batch import BatchStore
 from .config import Settings
-from .documents import normalize
 from .orchestrator import consultar_v1, consultar_v2
 from .schemas import (
     AffiliationResponseV1,
@@ -17,7 +16,7 @@ from .schemas import (
     BatchJobAccepted,
     BatchJobStatus,
 )
-from .security import require_admin, requester_from_token, validar_purpose
+from .security import require_admin, requester_from_token, validar_documento, validar_purpose
 
 logging.basicConfig(level=logging.INFO)
 
@@ -47,12 +46,11 @@ async def health() -> dict:
 
 @app.get("/api/v1/affiliations/{document}", response_model=AffiliationResponseV1)
 async def consulta_v1(
-    document: str,
     request: Request,
     requester: str = Depends(requester_from_token),
     purpose: str = Depends(validar_purpose),
+    canonico: str = Depends(validar_documento),
 ) -> AffiliationResponseV1:
-    canonico = normalize(document)
     respuesta = await consultar_v1(canonico, requester, request.app.state.adapters)
     await request.app.state.audit.registrar(requester, purpose, respuesta.result, canonico)
     return respuesta
@@ -60,12 +58,11 @@ async def consulta_v1(
 
 @app.get("/api/v2/affiliations/{document}", response_model=AffiliationResponseV2)
 async def consulta_v2(
-    document: str,
     request: Request,
     requester: str = Depends(requester_from_token),
     purpose: str = Depends(validar_purpose),
+    canonico: str = Depends(validar_documento),
 ) -> AffiliationResponseV2:
-    canonico = normalize(document)
     respuesta = await consultar_v2(canonico, requester, request.app.state.adapters)
     await request.app.state.audit.registrar(requester, purpose, respuesta.result, canonico)
     return respuesta
