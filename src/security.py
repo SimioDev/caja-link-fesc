@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import Depends, Header, HTTPException, Request
 
 from .config import Settings
+from .documents import is_valid, normalize
 
 VALID_PURPOSES = {"TARIFA_SUBSIDIADA", "SUBSIDIO_MONETARIO", "VALIDACION_AFILIACION"}
 
@@ -45,3 +46,12 @@ def validar_purpose(purpose: Optional[str] = None) -> str:
     if not purpose or purpose not in VALID_PURPOSES:
         raise HTTPException(status_code=400, detail="purpose ausente o invalido")
     return purpose
+
+
+def validar_documento(document: str) -> str:
+    """Devuelve el documento normalizado o 400 si no contiene digitos utiles, para
+    no responder NO_AFILIADO sobre algo que no es un documento."""
+    canonico = normalize(document)
+    if not is_valid(canonico):
+        raise HTTPException(status_code=400, detail="document invalido: debe contener digitos")
+    return canonico

@@ -15,6 +15,12 @@ def normalize(raw: str) -> str:
     return stripped or ("0" if digits else "")
 
 
+def is_valid(canonical: str) -> bool:
+    """Un documento canonico es valido si conserva al menos un digito distinto de
+    cero; '' (sin digitos) o '0' (solo ceros) no identifican a ninguna persona."""
+    return canonical not in ("", "0")
+
+
 def to_oriente_format(document: str) -> str:
     """Caja Oriente exige exactamente 12 dígitos con ceros a la izquierda."""
     return document.zfill(12)
