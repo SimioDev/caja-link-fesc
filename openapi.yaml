@@ -1,0 +1,210 @@
+openapi: 3.0.3
+info:
+  title: Caja Link
+  version: "1.0.0"
+  description: Servicio de interoperabilidad entre cajas de compensacion (FESC Legacy Challenge 2026, nivel Profesional).
+servers:
+  - url: http://localhost:8083
+paths:
+  /api/v1/affiliations/{document}:
+    get:
+      summary: Consulta en linea de afiliacion vigente en otras cajas (version 1)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/document'
+        - $ref: '#/components/parameters/purpose'
+      responses:
+        "200":
+          description: Resultado de la consulta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffiliationResponseV1'
+        "400":
+          description: purpose ausente o invalido
+        "401":
+          description: Token ausente o invalido
+  /api/v2/affiliations/{document}:
+    get:
+      summary: Igual que v1, agregando affiliateType en cada coincidencia
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/document'
+        - $ref: '#/components/parameters/purpose'
+      responses:
+        "200":
+          description: Resultado de la consulta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AffiliationResponseV2'
+        "400":
+          description: purpose ausente o invalido
+        "401":
+          description: Token ausente o invalido
+  /api/v1/batch-checks:
+    post:
+      summary: Cruce por lote de documentos (CSV con columna document)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          text/csv:
+            schema:
+              type: string
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "202":
+          description: Lote aceptado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchJobAccepted'
+  /api/v1/batch-checks/{jobId}:
+    get:
+      summary: Estado y resultados de un lote
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Estado del lote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchJobStatus'
+        "404":
+          description: jobId desconocido
+  /api/v1/audit:
+    get:
+      summary: Entradas de auditoria (solo ADMIN_TOKEN)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Entradas de auditoria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditEntry'
+        "401":
+          description: Token ausente
+        "403":
+          description: Token valido pero no es ADMIN_TOKEN
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  parameters:
+    document:
+      name: document
+      in: path
+      required: true
+      schema:
+        type: string
+    purpose:
+      name: purpose
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [TARIFA_SUBSIDIADA, SUBSIDIO_MONETARIO, VALIDACION_AFILIACION]
+  schemas:
+    AffiliationMatchV1:
+      type: object
+      properties:
+        caja: { type: string }
+        validFrom: { type: string, format: date }
+        validTo: { type: string, format: date, nullable: true }
+        source: { type: string, enum: [ONLINE, FILE] }
+        asOf: { type: string, format: date }
+    AffiliationMatchV2:
+      allOf:
+        - $ref: '#/components/schemas/AffiliationMatchV1'
+        - type: object
+          properties:
+            affiliateType:
+              type: string
+              enum: [DEPENDIENTE, INDEPENDIENTE, PENSIONADO]
+    AffiliationResponseV1:
+      type: object
+      properties:
+        requestId: { type: string }
+        result: { type: string, enum: [AFILIADO_OTRA_CAJA, NO_AFILIADO, INDETERMINADO] }
+        matches:
+          type: array
+          items: { $ref: '#/components/schemas/AffiliationMatchV1' }
+        unavailable:
+          type: array
+          items: { type: string }
+    AffiliationResponseV2:
+      type: object
+      properties:
+        requestId: { type: string }
+        result: { type: string, enum: [AFILIADO_OTRA_CAJA, NO_AFILIADO, INDETERMINADO] }
+        matches:
+          type: array
+          items: { $ref: '#/components/schemas/AffiliationMatchV2' }
+        unavailable:
+          type: array
+          items: { type: string }
+    BatchJobAccepted:
+      type: object
+      properties:
+        jobId: { type: string }
+    BatchResultItem:
+      type: object
+      properties:
+        document: { type: string }
+        result: { type: string, enum: [AFILIADO_OTRA_CAJA, NO_AFILIADO, INDETERMINADO] }
+        matches:
+          type: array
+          items: { $ref: '#/components/schemas/AffiliationMatchV1' }
+        unavailable:
+          type: array
+          items: { type: string }
+    BatchJobStatus:
+      type: object
+      properties:
+        status: { type: string, enum: [PENDING, RUNNING, DONE] }
+        results:
+          type: array
+          items: { $ref: '#/components/schemas/BatchResultItem' }
+    AuditEntry:
+      type: object
+      properties:
+        timestamp: { type: string }
+        requestingCaja: { type: string }
+        purpose: { type: string }
+        result: { type: string, enum: [AFILIADO_OTRA_CAJA, NO_AFILIADO, INDETERMINADO] }
+        documentMasked: { type: string }
