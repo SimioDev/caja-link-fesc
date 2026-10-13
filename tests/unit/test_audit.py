@@ -28,3 +28,13 @@ async def test_recientes_respects_the_limit_and_keeps_the_most_recent():
     entries = await log.recientes(limit=2)
     assert len(entries) == 2
     assert entries[-1].documentMasked.endswith("3333")
+
+
+@pytest.mark.asyncio
+async def test_recientes_clamps_negative_or_oversized_limit():
+    log = AuditLog()
+    for document in ["1111111111", "2222222222", "3333333333"]:
+        await log.registrar("NORTE", "VALIDACION_AFILIACION", ConsultaResultado.NO_AFILIADO, document)
+
+    assert await log.recientes(limit=-5) == []
+    assert len(await log.recientes(limit=10_000)) == 3
