@@ -1,3 +1,4 @@
+import hmac
 from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, Request
@@ -18,7 +19,7 @@ def requester_from_token(
         raise HTTPException(status_code=401, detail="Falta token Bearer")
     token = authorization.removeprefix("Bearer ").strip()
     for caja, expected in settings.tokens.items():
-        if caja != "ADMIN" and expected and token == expected:
+        if caja != "ADMIN" and expected and hmac.compare_digest(token, expected):
             return caja
     raise HTTPException(status_code=401, detail="Token invalido")
 
@@ -29,7 +30,8 @@ def require_admin(
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Falta token Bearer")
     token = authorization.removeprefix("Bearer ").strip()
-    if not settings.tokens.get("ADMIN") or token != settings.tokens["ADMIN"]:
+    expected = settings.tokens.get("ADMIN")
+    if not expected or not hmac.compare_digest(token, expected):
         raise HTTPException(status_code=403, detail="Requiere ADMIN_TOKEN")
 
 
