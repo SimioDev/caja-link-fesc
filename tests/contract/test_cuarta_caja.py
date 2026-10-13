@@ -1,10 +1,20 @@
 import os
 import re
+import shutil
 import subprocess
 import time
 from pathlib import Path
 
+import pytest
 import requests
+
+if shutil.which("docker") is None:
+    pytest.skip(
+        "Requiere el CLI de docker en el host; no esta disponible dentro del "
+        "contenedor tests (no se monta docker.sock, por regla). Correr este "
+        "archivo directamente desde el host.",
+        allow_module_level=True,
+    )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = REPO_ROOT / ".env"
