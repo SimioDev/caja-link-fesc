@@ -2,14 +2,21 @@ import logging
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 
 from .adapters.registry import build_adapters
 from .audit import AuditLog
+from .batch import BatchStore
 from .config import Settings
 from .documents import normalize
 from .orchestrator import consultar_v1, consultar_v2
-from .schemas import AffiliationResponseV1, AffiliationResponseV2, AuditEntry
+from .schemas import (
+    AffiliationResponseV1,
+    AffiliationResponseV2,
+    AuditEntry,
+    BatchJobAccepted,
+    BatchJobStatus,
+)
 from .security import require_admin, requester_from_token, validar_purpose
 
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +30,7 @@ async def lifespan(app: FastAPI):
     app.state.http_client = client
     app.state.adapters = build_adapters(settings, client)
     app.state.audit = AuditLog()
+    app.state.batch_store = BatchStore(concurrency=50)
     try:
         yield
     finally:
@@ -66,3 +74,38 @@ async def consulta_v2(
 @app.get("/api/v1/audit", response_model=list[AuditEntry])
 async def auditoria(request: Request, limit: int = 100, _: None = Depends(require_admin)) -> list[AuditEntry]:
     return await request.app.state.audit.recientes(limit)
+
+
+@app.post("/api/v1/batch-checks", status_code=202, response_model=BatchJobAccepted)
+async def crear_lote(
+    request: Request,
+    requester: str = Depends(requester_from_token),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+) -> BatchJobAccepted:
+    content_type = request.headers.get("content-type", "")
+    if content_type.startswith("multipart/form-data"):
+        form = await request.form()
+        upload = form.get("file")
+        if upload is None:
+            raise HTTPException(status_code=400, detail="Falta el campo 'file'")
+        csv_bytes = await upload.read()
+    else:
+        csv_bytes = await request.body()
+
+    try:
+        documentos = request.app.state.batch_store.parse_documents(csv_bytes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    job_id = await request.app.state.batch_store.get_or_create(
+        idempotency_key, documentos, requester, request.app.state.adapters
+    )
+    return BatchJobAccepted(jobId=job_id)
+
+
+@app.get("/api/v1/batch-checks/{job_id}", response_model=BatchJobStatus)
+async def estado_lote(job_id: str, request: Request) -> BatchJobStatus:
+    job = request.app.state.batch_store.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="jobId desconocido")
+    return BatchJobStatus(status=job.status, results=job.results)
