@@ -1,4 +1,4 @@
-# Caja Link — <nombre de la pareja>
+# Caja Link — Cabrera & Peñaranda
 
 <!--
 Documentación del software de la pareja (entregable «README: documentación del software», 2 puntos).
@@ -8,15 +8,22 @@ y una sección vacía no suma. La guía del kit está en KIT.md.
 
 ## Descripción
 
-<!-- Qué problema resuelve su software y para quién (al menos 30 palabras). -->
+Caja Link es el servicio de interoperabilidad entre cuatro cajas de compensación familiar
+(Norte, Oriente, Centro y Sur) que permite a cualquiera de ellas validar, antes de otorgar una
+tarifa subsidiada o un subsidio, si una persona ya tiene afiliación vigente en otra caja —
+sin compartir bases de datos entre sí, sin exponer más datos personales de los estrictamente
+necesarios, y sin dar nunca una respuesta falsa cuando alguna caja no responde a tiempo.
 
 ## Integrantes
 
-<!-- Una viñeta por integrante con su nombre completo. -->
+- Nestor Fabian Cabrera Carreño
+- William Alexsi Peñaranda Castro
 
 ## Requisitos
 
-<!-- Qué se necesita instalado para ejecutarlo (Docker, versiones, sistema operativo…). -->
+Docker y el plugin `docker compose` (no se usa `docker-compose` standalone), Git, y acceso a
+internet solo para construir las imágenes la primera vez. No hace falta tener Python instalado
+en el equipo: todo corre dentro de contenedores.
 
 ## Instalación y ejecución
 
