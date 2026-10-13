@@ -1,4 +1,4 @@
-# Caja Link — Cabrera & Peñaranda
+# Caja Link - Cabrera & Peñaranda
 
 <!--
 Documentación del software de la pareja (entregable «README: documentación del software», 2 puntos).
@@ -10,7 +10,7 @@ y una sección vacía no suma. La guía del kit está en KIT.md.
 
 Caja Link es el servicio de interoperabilidad entre cuatro cajas de compensación familiar
 (Norte, Oriente, Centro y Sur) que permite a cualquiera de ellas validar, antes de otorgar una
-tarifa subsidiada o un subsidio, si una persona ya tiene afiliación vigente en otra caja —
+tarifa subsidiada o un subsidio, si una persona ya tiene afiliación vigente en otra caja,
 sin compartir bases de datos entre sí, sin exponer más datos personales de los estrictamente
 necesarios, y sin dar nunca una respuesta falsa cuando alguna caja no responde a tiempo.
 
