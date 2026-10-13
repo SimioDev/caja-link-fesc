@@ -1,0 +1,14 @@
+# Declaración de las cajas que el servicio conoce. Credenciales y URLs viven en
+# variables de entorno (ver .env.example), nunca acá ni en src/. Caja Sur además
+# requiere CAJA_SUR_ENABLED=true en el entorno para activarse (lo hace el
+# validador oficial al evaluar P14 con docker compose --profile caja-sur up -d
+# --force-recreate).
+cajas:
+  - nombre: norte
+    adaptador: rest_api_key
+  - nombre: oriente
+    adaptador: soap
+  - nombre: centro
+    adaptador: archivo_plano
+  - nombre: sur
+    adaptador: rest_bearer_v2
