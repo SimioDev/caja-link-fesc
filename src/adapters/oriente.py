@@ -31,6 +31,13 @@ def _parse_fecha(value: str) -> date:
     return datetime.strptime(value, "%d/%m/%Y").date()
 
 
+def _es_conexion_contaminada(response: httpx.Response) -> bool:
+    """Tras responder 503 sin leer el cuerpo SOAP, el servidor deja esos bytes en la
+    conexion keep-alive; la siguiente peticion llega mezclada y recibe un 400 en HTML
+    (no SOAP) con la conexion cerrada. Se detecta para reintentar una sola vez."""
+    return response.status_code == 400 and "xml" not in response.headers.get("content-type", "").lower()
+
+
 class OrienteAdapter(CajaAdapter):
     name = "ORIENTE"
 
@@ -41,15 +48,26 @@ class OrienteAdapter(CajaAdapter):
         self._password = password
         self._timeout = timeout
 
+    async def _post(self, payload: bytes) -> httpx.Response:
+        return await self._client.post(
+            self._base_url,
+            content=payload,
+            headers={"Content-Type": "text/xml; charset=utf-8", "SOAPAction": "ConsultarAfiliacion"},
+            timeout=self._timeout,
+        )
+
     async def lookup(self, document: str) -> CajaLookup:
-        payload = _envelope(self._user, self._password, to_oriente_format(document))
+        payload = _envelope(self._user, self._password, to_oriente_format(document)).encode("utf-8")
         try:
-            response = await self._client.post(
-                self._base_url,
-                content=payload.encode("utf-8"),
-                headers={"Content-Type": "text/xml; charset=utf-8", "SOAPAction": "ConsultarAfiliacion"},
-                timeout=self._timeout,
-            )
+            try:
+                response = await self._post(payload)
+            except httpx.TimeoutException:
+                raise  # caja lenta: nunca se reintenta, para no pasar del limite de 5 s
+            except httpx.TransportError:
+                response = await self._post(payload)  # conexion reutilizada que el servidor ya cerro
+            else:
+                if _es_conexion_contaminada(response):
+                    response = await self._post(payload)
         except httpx.HTTPError:
             logger.warning("Caja Oriente no disponible consultando %s", document)
             return CajaLookup(caja=self.name, available=False)
@@ -64,7 +82,15 @@ class OrienteAdapter(CajaAdapter):
             logger.warning("Caja Oriente devolvio SOAP Fault (credenciales o formato)")
             return CajaLookup(caja=self.name, available=False)
 
-        if root.findtext(f".//{{{_ORI_NS}}}Encontrado") != "true":
+        encontrado = root.findtext(f".//{{{_ORI_NS}}}Encontrado")
+        if response.status_code != 200 or encontrado not in ("true", "false"):
+            # Solo un 200 con <Encontrado> explicito es una respuesta de negocio; una
+            # pagina de error u otro cuerpo inesperado nunca puede leerse como
+            # "no afiliado".
+            logger.warning("Caja Oriente devolvio una respuesta inesperada (HTTP %s)", response.status_code)
+            return CajaLookup(caja=self.name, available=False)
+
+        if encontrado == "false":
             return CajaLookup(caja=self.name, available=True, memberships=())
 
         memberships = []
