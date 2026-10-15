@@ -61,3 +61,14 @@ def test_validar_documento_rejects_documents_without_digits_with_400(raw):
     with pytest.raises(HTTPException) as excinfo:
         validar_documento(raw)
     assert excinfo.value.status_code == 400
+
+
+def test_openapi_declara_el_esquema_bearer_y_oculta_el_header_authorization():
+    from src.main import app
+
+    spec = app.openapi()
+    assert "HTTPBearer" in spec["components"]["securitySchemes"]
+    for path in ("/api/v1/affiliations/{document}", "/api/v2/affiliations/{document}", "/api/v1/audit"):
+        operation = spec["paths"][path]["get"]
+        assert {"HTTPBearer": []} in operation["security"]
+        assert "authorization" not in {p["name"].lower() for p in operation["parameters"]}
