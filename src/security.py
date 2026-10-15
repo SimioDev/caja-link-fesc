@@ -2,11 +2,18 @@ import hmac
 from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, Request
+from fastapi.security import HTTPBearer
 
 from .config import Settings
 from .documents import is_valid, normalize
 
 VALID_PURPOSES = {"TARIFA_SUBSIDIADA", "SUBSIDIO_MONETARIO", "VALIDACION_AFILIACION"}
+
+# Solo documenta el esquema Bearer en OpenAPI para que Swagger UI muestre el boton
+# Authorize (Swagger ignora los parametros de header llamados Authorization). La
+# validacion real sigue en requester_from_token / require_admin; auto_error=False
+# evita que este esquema responda por su cuenta.
+_bearer_docs = HTTPBearer(auto_error=False, description="Token de la caja consumidora o ADMIN_TOKEN")
 
 
 def _tokens_match(a: str, b: str) -> bool:
@@ -20,7 +27,9 @@ def get_settings(request: Request) -> Settings:
 
 
 def requester_from_token(
-    authorization: Optional[str] = Header(default=None), settings: Settings = Depends(get_settings)
+    authorization: Optional[str] = Header(default=None, include_in_schema=False),
+    settings: Settings = Depends(get_settings),
+    _docs: object = Depends(_bearer_docs),
 ) -> str:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Falta token Bearer")
@@ -32,7 +41,9 @@ def requester_from_token(
 
 
 def require_admin(
-    authorization: Optional[str] = Header(default=None), settings: Settings = Depends(get_settings)
+    authorization: Optional[str] = Header(default=None, include_in_schema=False),
+    settings: Settings = Depends(get_settings),
+    _docs: object = Depends(_bearer_docs),
 ) -> None:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Falta token Bearer")
