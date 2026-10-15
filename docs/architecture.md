@@ -42,6 +42,13 @@ se cumple ejecutando las llamadas en paralelo con un timeout individual menor
 (2.5s), de forma que incluso con una caja lenta o caida el tiempo total de
 respuesta no depende de cuantas cajas haya, solo del timeout mas alto alcanzado.
 
+Las cajas REST (Norte y Sur) pueden fallar de forma pasajera ("lenta a ratos, a
+veces no responde"): ante un 502/503/504 o una conexion caida se reintenta hasta
+dos veces con esperas cortas (0,05 s y 0,15 s). Un timeout nunca se reintenta,
+porque significa que la caja esta lenta y repetir pasaria del limite de 5
+segundos. Caja Oriente reintenta una sola vez cuando la conexion keep-alive quedo
+contaminada tras un 503. Si todos los intentos fallan, la caja va a unavailable.
+
 ## Alternativas descartadas
 
 - Patron federado (cada caja resuelve su parte y las combina el cliente):

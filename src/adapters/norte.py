@@ -4,6 +4,7 @@ from datetime import date
 import httpx
 
 from .base import CajaAdapter
+from .reintentos import get_con_reintentos
 from .models import AffiliateType, CajaLookup, Membership
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class NorteAdapter(CajaAdapter):
     async def lookup(self, document: str) -> CajaLookup:
         url = f"{self._base_url}/api/v1/afiliados/{document}"
         try:
-            response = await self._client.get(url, headers={"X-Api-Key": self._api_key}, timeout=self._timeout)
+            response = await get_con_reintentos(self._client, url, {"X-Api-Key": self._api_key}, self._timeout)
         except httpx.HTTPError:
             logger.warning("Caja Norte no disponible consultando %s", document)
             return CajaLookup(caja=self.name, available=False)

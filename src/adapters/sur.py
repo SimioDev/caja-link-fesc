@@ -4,6 +4,7 @@ from datetime import date
 import httpx
 
 from .base import CajaAdapter
+from .reintentos import get_con_reintentos
 from .models import AffiliateType, CajaLookup, Membership
 
 logger = logging.getLogger(__name__)
@@ -27,8 +28,8 @@ class SurAdapter(CajaAdapter):
     async def lookup(self, document: str) -> CajaLookup:
         url = f"{self._base_url}/v2/people/{document}/memberships"
         try:
-            response = await self._client.get(
-                url, headers={"Authorization": f"Bearer {self._token}"}, timeout=self._timeout
+            response = await get_con_reintentos(
+                self._client, url, {"Authorization": f"Bearer {self._token}"}, self._timeout
             )
         except httpx.HTTPError:
             logger.warning("Caja Sur no disponible consultando %s", document)
