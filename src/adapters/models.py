@@ -17,7 +17,7 @@ class Membership:
     affiliate_type: AffiliateType
 
     def is_active(self, as_of: date) -> bool:
-        return self.valid_to is None or self.valid_to >= as_of
+        return self.valid_from <= as_of and (self.valid_to is None or self.valid_to >= as_of)
 
 
 @dataclass(frozen=True)
