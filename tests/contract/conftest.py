@@ -38,7 +38,7 @@ def centro_dir() -> str:
 @pytest.fixture(scope="session")
 def known_norte_document(norte_url, norte_api_key) -> str:
     """Primer documento que Caja Norte reconoce, preguntado a su propia interfaz
-    publica (nunca a mocks/data)."""
+    publica (nunca a los datos internos de la caja simulada)."""
     import requests
 
     from src.documents import normalize

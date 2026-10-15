@@ -64,7 +64,8 @@ def _parse_file(path: Path, file_key: Tuple[str, int, int]) -> _CentroSnapshot:
 
 class CentroAdapter(CajaAdapter):
     """Caja Centro no tiene servicio en vivo: lee el archivo plano diario mas
-    reciente del directorio publicado (nunca mocks/data).
+    reciente del directorio que Caja Centro publica (CAJA_CENTRO_DIR), nunca los
+    datos internos de las cajas simuladas.
 
     El archivo se parsea una sola vez y se cachea en memoria; solo se vuelve a
     leer cuando aparece un archivo mas reciente o cambia su mtime/tamano."""
